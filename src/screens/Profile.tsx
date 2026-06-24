@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store'
 import { personalTargets } from '../lib/scoring'
 import { fadeUp } from '../components/ui'
+import { useSyncStatus } from '../lib/sync'
 
 const HANDICAP_PRESETS = [
   { label: 'Поровну 50/50', a: 1, b: 1 },
@@ -22,6 +23,16 @@ export default function Profile() {
 
   const [notifMsg, setNotifMsg] = useState<string | null>(null)
   const targets = personalTargets(settings)
+  const { status } = useSyncStatus()
+  const householdCode = useStore((s) => s.householdCode)
+  const syncLabel =
+    status === 'live'
+      ? `🟢 ${householdCode}`
+      : status === 'connecting'
+      ? '🟡 Подключение…'
+      : status === 'error'
+      ? '🔴 Ошибка'
+      : 'Настроить'
 
   async function enableNotifications() {
     if (!('Notification' in window)) {
@@ -120,6 +131,17 @@ export default function Profile() {
           {settings.notificationsEnabled ? 'Уведомления включены ✓' : 'Включить уведомления'}
         </button>
         {notifMsg && <p className="muted center" style={{ fontSize: 13, marginTop: 10 }}>{notifMsg}</p>}
+      </motion.div>
+
+      <motion.div {...fadeUp} className="card">
+        <div className="section-label" style={{ margin: '0 0 8px' }}>📱 Синхронизация устройств</div>
+        <p className="faint" style={{ fontSize: 12, marginTop: 0 }}>
+          Подключите общий Firebase, чтобы видеть один счёт на двух телефонах в реальном времени.
+        </p>
+        <button className="btn btn-block between" onClick={() => nav('/sync')} data-testid="open-sync">
+          <span>Синхронизация</span>
+          <span className="muted">{syncLabel} ›</span>
+        </button>
       </motion.div>
 
       <motion.div {...fadeUp} className="card" style={{ display: 'grid', gap: 10 }}>

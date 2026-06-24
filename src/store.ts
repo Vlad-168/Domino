@@ -68,6 +68,10 @@ const seedRewards = (): Reward[] => [
 ]
 
 interface Store extends AppState {
+  // sync
+  householdCode: string | null
+  deletedLogIds: string[]
+  setHouseholdCode: (code: string | null) => void
   // onboarding
   completeOnboarding: (a: string, b: string) => void
   // chores
@@ -122,6 +126,10 @@ export const useStore = create<Store>()(
       weeks: [],
       season: { wins: { A: 0, B: 0 }, ties: 0 },
       currentWeekStart: startOfWeek(Date.now()),
+      householdCode: null,
+      deletedLogIds: [],
+
+      setHouseholdCode: (code) => set(() => ({ householdCode: code })),
 
       completeOnboarding: (a, b) =>
         set((s) => ({
@@ -182,7 +190,12 @@ export const useStore = create<Store>()(
         }),
 
       undoEntry: (entryId) =>
-        set((s) => ({ log: s.log.filter((e) => e.id !== entryId) })),
+        set((s) => ({
+          log: s.log.filter((e) => e.id !== entryId),
+          deletedLogIds: s.deletedLogIds.includes(entryId)
+            ? s.deletedLogIds
+            : [...s.deletedLogIds, entryId],
+        })),
 
       addReward: (r) =>
         set((s) => ({
@@ -249,6 +262,8 @@ export const useStore = create<Store>()(
           weeks: [],
           season: { wins: { A: 0, B: 0 }, ties: 0 },
           currentWeekStart: startOfWeek(Date.now()),
+          householdCode: null,
+          deletedLogIds: [],
         })),
     }),
     {

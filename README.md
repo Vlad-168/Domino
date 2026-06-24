@@ -48,6 +48,25 @@ npm run build     # прод-сборка в dist/ (+ service worker)
 npm run preview   # предпросмотр сборки
 ```
 
+## 🔄 Синхронизация двух телефонов
+
+Облако — Firebase Firestore, конфиг вводится **в самом приложении** (Профиль →
+Синхронизация), без пересборки и секретов в репозитории. Настройка один раз:
+
+1. Создайте бесплатный проект на <https://console.firebase.google.com> (тариф Spark).
+2. **Build → Firestore Database → Create database** (можно production mode).
+3. **Build → Authentication → Sign-in method → Anonymous → Enable**.
+4. **Project settings → General → Your apps → Web app** → скопируйте объект
+   `firebaseConfig`.
+5. Опубликуйте правила доступа из `firestore.rules`
+   (`firebase deploy --only firestore:rules` или вставьте в консоли Firestore → Rules).
+6. В приложении на **обоих** телефонах: Профиль → Синхронизация → вставьте тот же
+   `firebaseConfig` и введите **один общий код семьи** → «Подключить».
+
+Готово: отметки, баллы, награды и недельные отчёты летят на оба устройства в
+реальном времени через Firestore-листенер. Облако — единственный источник правды
+(ТЗ §5); локально только кэш. На iOS подписка восстанавливается при каждом запуске.
+
 ## 📦 Деплой
 
 **GitHub Pages** — автоматически при пуше в `master`

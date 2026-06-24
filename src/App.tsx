@@ -10,6 +10,7 @@ import Rewards from './screens/Rewards'
 import Profile from './screens/Profile'
 import Report from './screens/Report'
 import Achievements from './screens/Achievements'
+import Sync from './screens/Sync'
 
 function AnimatedRoutes() {
   const location = useLocation()
@@ -21,6 +22,7 @@ function AnimatedRoutes() {
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -8 }}
         transition={{ duration: 0.2 }}
+        style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%' }}
       >
         <Routes location={location}>
           <Route path="/" element={<Home />} />
@@ -30,6 +32,7 @@ function AnimatedRoutes() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/report" element={<Report />} />
           <Route path="/achievements" element={<Achievements />} />
+          <Route path="/sync" element={<Sync />} />
         </Routes>
       </motion.div>
     </AnimatePresence>

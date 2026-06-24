@@ -79,8 +79,15 @@ export default function Sync() {
     setCode(cleanCode)
     try {
       await startSync(cleanCode, cfg)
-    } catch {
-      setError('Не удалось подключиться. Проверьте конфиг и доступ к интернету.')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      if (msg.includes('auth/operation-not-allowed') || msg.includes('OPERATION_NOT_ALLOWED')) {
+        setError('Включите Anonymous Authentication: Firebase Console → Authentication → Sign-in method → Anonymous → Enable.')
+      } else if (msg.includes('permission-denied') || msg.includes('PERMISSION_DENIED')) {
+        setError('Firestore отклонил запрос. Опубликуйте правила из firestore.rules в Firebase Console → Firestore → Rules.')
+      } else {
+        setError(`Ошибка подключения: ${msg}`)
+      }
     }
   }
 

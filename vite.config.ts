@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { copyFileSync } from 'node:fs'
 
 // Base path for GitHub Pages project site (vlad-168/domino -> /domino/)
-const BASE = process.env.VITE_BASE ?? '/domino/'
+const BASE = process.env.VITE_BASE ?? '/Domino/'
 
 // Copy index.html -> 404.html so GitHub Pages serves the SPA on deep links.
 function spaFallback() {

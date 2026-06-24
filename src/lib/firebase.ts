@@ -5,6 +5,7 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app'
 import { getAuth, signInAnonymously, type Auth } from 'firebase/auth'
 import { getFirestore, type Firestore } from 'firebase/firestore'
+import { DEFAULT_FIREBASE_CONFIG } from './firebaseDefaults'
 
 export interface FirebaseConfig {
   apiKey: string
@@ -26,10 +27,17 @@ let authReady: Promise<void> | null = null
 export function loadSavedConfig(): FirebaseConfig | null {
   try {
     const raw = localStorage.getItem(CONFIG_KEY)
-    return raw ? (JSON.parse(raw) as FirebaseConfig) : null
+    if (raw) return JSON.parse(raw) as FirebaseConfig
   } catch {
-    return null
+    /* ignore */
   }
+  // Fall back to a built-in shared project, if one is configured.
+  return hasBuiltinConfig() ? DEFAULT_FIREBASE_CONFIG : null
+}
+
+/** True when the app ships with a built-in shared Firebase project. */
+export function hasBuiltinConfig(): boolean {
+  return isConfigValid(DEFAULT_FIREBASE_CONFIG)
 }
 
 export function saveConfig(cfg: FirebaseConfig | null) {

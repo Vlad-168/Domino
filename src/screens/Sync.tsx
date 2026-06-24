@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store'
 import { fadeUp } from '../components/ui'
 import {
+  hasBuiltinConfig,
   isConfigValid,
   loadSavedConfig,
   saveConfig,
   type FirebaseConfig,
 } from '../lib/firebase'
+import { DEFAULT_FIREBASE_CONFIG } from '../lib/firebaseDefaults'
 import { generateCode, startSync, stopSync, useSyncStatus } from '../lib/sync'
 
 // Accepts either the JS snippet copied from the Firebase console
@@ -48,8 +50,11 @@ export default function Sync() {
   const householdCode = useStore((s) => s.householdCode)
   const setHouseholdCode = useStore((s) => s.setHouseholdCode)
 
+  const builtin = hasBuiltinConfig()
   const saved = loadSavedConfig()
-  const [configText, setConfigText] = useState(saved ? JSON.stringify(saved, null, 2) : '')
+  const [configText, setConfigText] = useState(
+    saved && !builtin ? JSON.stringify(saved, null, 2) : ''
+  )
   const [code, setCode] = useState(householdCode ?? '')
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -59,7 +64,7 @@ export default function Sync() {
 
   async function connect() {
     setError(null)
-    const cfg = parseConfig(configText)
+    const cfg = builtin ? DEFAULT_FIREBASE_CONFIG : parseConfig(configText)
     if (!isConfigValid(cfg)) {
       setError('Не удалось распознать конфиг. Нужны поля apiKey, authDomain, projectId, appId.')
       return
@@ -124,24 +129,34 @@ export default function Sync() {
         </>
       ) : (
         <>
-          <motion.div {...fadeUp} className="card">
-            <div className="section-label" style={{ margin: '0 0 8px' }}>1. Firebase-конфиг</div>
-            <p className="faint" style={{ fontSize: 12, marginTop: 0 }}>
-              В консоли Firebase → Project settings → «Your apps» → SDK setup, скопируйте объект
-              <code> firebaseConfig</code> и вставьте сюда. Оба партнёра используют один проект.
-            </p>
-            <textarea
-              className="input"
-              style={{ minHeight: 120, fontFamily: 'monospace', fontSize: 13 }}
-              placeholder={'{\n  "apiKey": "...",\n  "authDomain": "...",\n  "projectId": "...",\n  "appId": "..."\n}'}
-              value={configText}
-              onChange={(e) => setConfigText(e.target.value)}
-              aria-label="Firebase конфиг"
-            />
-          </motion.div>
+          {builtin ? (
+            <motion.div {...fadeUp} className="card row gap12">
+              <span style={{ fontSize: 24 }}>☁️</span>
+              <span className="faint" style={{ fontSize: 13, lineHeight: 1.5 }}>
+                Облако Domino уже подключено. Просто введите общий код семьи —
+                и оба телефона начнут синхронизироваться.
+              </span>
+            </motion.div>
+          ) : (
+            <motion.div {...fadeUp} className="card">
+              <div className="section-label" style={{ margin: '0 0 8px' }}>1. Firebase-конфиг</div>
+              <p className="faint" style={{ fontSize: 12, marginTop: 0 }}>
+                В консоли Firebase → Project settings → «Your apps» → SDK setup, скопируйте объект
+                <code> firebaseConfig</code> и вставьте сюда. Оба партнёра используют один проект.
+              </p>
+              <textarea
+                className="input"
+                style={{ minHeight: 120, fontFamily: 'monospace', fontSize: 13 }}
+                placeholder={'{\n  "apiKey": "...",\n  "authDomain": "...",\n  "projectId": "...",\n  "appId": "..."\n}'}
+                value={configText}
+                onChange={(e) => setConfigText(e.target.value)}
+                aria-label="Firebase конфиг"
+              />
+            </motion.div>
+          )}
 
           <motion.div {...fadeUp} className="card">
-            <div className="section-label" style={{ margin: '0 0 8px' }}>2. Код семьи</div>
+            <div className="section-label" style={{ margin: '0 0 8px' }}>{builtin ? 'Код семьи' : '2. Код семьи'}</div>
             <p className="faint" style={{ fontSize: 12, marginTop: 0 }}>
               Придумайте общий код (или сгенерируйте). Второй партнёр вводит точно такой же.
             </p>

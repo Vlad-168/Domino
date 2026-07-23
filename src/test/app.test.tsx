@@ -108,6 +108,7 @@ describe('Close week from Report', () => {
     expect(useStore.getState().weeks.length).toBe(1)
 
     await user.click(await screen.findByTestId('reopen-week'))
+    await user.click(await screen.findByText('Далее'))
     await user.click(await screen.findByTestId('confirm-reopen'))
     expect(useStore.getState().weeks.length).toBe(0)
   })

@@ -71,6 +71,7 @@ export default function Report() {
   const [confirm, setConfirm] = useState(false)
   const [confirmStep, setConfirmStep] = useState(false)
   const [reopen, setReopen] = useState(false)
+  const [reopenStep, setReopenStep] = useState(false)
   const [celebrate, setCelebrate] = useState(false)
 
   const live = useMemo(
@@ -91,9 +92,15 @@ export default function Report() {
     setTimeout(() => setCelebrate(false), 2600)
   }
 
+  function openReopen() {
+    setReopenStep(false)
+    setReopen(true)
+  }
+
   function doReopen() {
     reopenWeek()
     setReopen(false)
+    setReopenStep(false)
   }
 
   return (
@@ -131,7 +138,7 @@ export default function Report() {
       {weeks.length > 0 && (
         <div className="row between" style={{ marginTop: 4 }}>
           <div className="section-label" style={{ margin: 0 }}>Прошлые недели</div>
-          <button className="chip" onClick={() => setReopen(true)} data-testid="reopen-week">
+          <button className="chip" onClick={openReopen} data-testid="reopen-week">
             ↩︎ Вернуть последнюю
           </button>
         </div>
@@ -165,14 +172,28 @@ export default function Report() {
         )}
       </Sheet>
 
-      <Sheet open={reopen} onClose={() => setReopen(false)} title="Вернуть последнюю неделю?">
-        <p className="muted">
-          Последний отчёт будет удалён, сезонный зачёт откатится, а закрытая неделя снова станет текущей. Отметки при этом сохранятся.
-        </p>
-        <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} onClick={doReopen} data-testid="confirm-reopen">
-          Да, вернуть неделю
-        </button>
-        <button className="btn btn-ghost btn-block" style={{ marginTop: 10 }} onClick={() => setReopen(false)}>Отмена</button>
+      <Sheet open={reopen} onClose={() => { setReopen(false); setReopenStep(false) }} title="Вернуть последнюю неделю?">
+        {!reopenStep ? (
+          <>
+            <p className="muted">
+              Последний отчёт будет удалён, сезонный зачёт откатится, а закрытая неделя снова станет текущей. Отметки при этом сохранятся.
+            </p>
+            <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} onClick={() => setReopenStep(true)}>
+              Далее
+            </button>
+            <button className="btn btn-ghost btn-block" style={{ marginTop: 10 }} onClick={() => setReopen(false)}>Отмена</button>
+          </>
+        ) : (
+          <>
+            <p className="muted">
+              Вы точно хотите откатить последнее закрытие недели? Текущий отчёт и одно очко сезонного зачёта будут отменены.
+            </p>
+            <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} onClick={doReopen} data-testid="confirm-reopen">
+              Да, вернуть неделю
+            </button>
+            <button className="btn btn-ghost btn-block" style={{ marginTop: 10 }} onClick={() => { setReopen(false); setReopenStep(false) }}>Отмена</button>
+          </>
+        )}
       </Sheet>
     </div>
   )

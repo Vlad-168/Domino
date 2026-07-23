@@ -148,6 +148,17 @@ a { color: inherit; text-decoration: none; }
 }
 .input:focus, .select:focus { outline: none; border-color: var(--primary); }
 
+/* iOS renders type=time/date with a native control that ignores box-sizing
+   and can spill past the card edge. Normalise it to a plain, centred field. */
+.input[type="time"], .input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+  text-align: center;
+}
+.input[type="time"]::-webkit-date-and-time-value { text-align: center; margin: 0; }
+
 /* ---------- Progress ---------- */
 .progress { height: 14px; border-radius: 999px; background: var(--bg-soft); overflow: hidden; border: 1px solid var(--border); }
 .progress > span { display: block; height: 100%; border-radius: 999px;

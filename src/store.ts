@@ -89,6 +89,7 @@ interface Store extends AppState {
   setPartnerName: (key: PartnerKey, name: string) => void
   // week
   closeWeek: () => void
+  reopenWeek: () => void
   // derived helpers (non-reactive)
   currentEntries: () => LogEntry[]
   resetAll: () => void
@@ -243,6 +244,22 @@ export const useStore = create<Store>()(
             currentWeekStart: startOfWeek(Date.now()) === s.currentWeekStart
               ? s.currentWeekStart + 7 * 86400000
               : startOfWeek(Date.now()),
+          }
+        }),
+
+      reopenWeek: () =>
+        set((s) => {
+          const [last, ...rest] = s.weeks
+          if (!last) return s
+          // Revert the season tally applied when this week was closed.
+          const season = { ...s.season, wins: { ...s.season.wins } }
+          if (last.winner === 'tie') season.ties = Math.max(0, season.ties - 1)
+          else season.wins[last.winner] = Math.max(0, season.wins[last.winner] - 1)
+          return {
+            weeks: rest,
+            season,
+            // Return to the week that was closed so the live tally is restored.
+            currentWeekStart: last.startTs,
           }
         }),
 

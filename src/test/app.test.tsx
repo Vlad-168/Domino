@@ -90,9 +90,26 @@ describe('Close week from Report', () => {
     await user.click(await screen.findByText('📊 Отчёты и сезон'))
 
     await user.click(await screen.findByTestId('close-week'))
+    await user.click(await screen.findByText('Далее'))
     await user.click(await screen.findByTestId('confirm-close'))
 
     expect(useStore.getState().weeks.length).toBe(1)
+  })
+
+  it('reopens the last closed week', async () => {
+    const user = userEvent.setup()
+    renderApp()
+    await user.click(screen.getByText('Профиль'))
+    await user.click(await screen.findByText('📊 Отчёты и сезон'))
+
+    await user.click(await screen.findByTestId('close-week'))
+    await user.click(await screen.findByText('Далее'))
+    await user.click(await screen.findByTestId('confirm-close'))
+    expect(useStore.getState().weeks.length).toBe(1)
+
+    await user.click(await screen.findByTestId('reopen-week'))
+    await user.click(await screen.findByTestId('confirm-reopen'))
+    expect(useStore.getState().weeks.length).toBe(0)
   })
 })
 

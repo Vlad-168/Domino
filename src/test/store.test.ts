@@ -87,6 +87,21 @@ describe('store: close week', () => {
     expect(st.weeks.length).toBe(1)
     expect(st.season.wins.A + st.season.wins.B + st.season.ties).toBe(1)
   })
+
+  it('reopens the last week, restoring the tally and season', () => {
+    const s = useStore.getState()
+    const chore = useStore.getState().chores[0]
+    s.logChore(chore.id, 'A')
+    const startBefore = useStore.getState().currentWeekStart
+    useStore.getState().closeWeek()
+    expect(useStore.getState().weeks.length).toBe(1)
+
+    useStore.getState().reopenWeek()
+    const st = useStore.getState()
+    expect(st.weeks.length).toBe(0)
+    expect(st.currentWeekStart).toBe(startBefore)
+    expect(st.season.wins.A + st.season.wins.B + st.season.ties).toBe(0)
+  })
 })
 
 describe('store: onboarding', () => {

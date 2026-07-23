@@ -67,7 +67,10 @@ function SnapshotCard({ snap, live }: { snap: WeekSnapshot; live?: boolean }) {
 export default function Report() {
   const { log, settings, currentWeekStart, weeks, season } = useStore()
   const closeWeek = useStore((s) => s.closeWeek)
+  const reopenWeek = useStore((s) => s.reopenWeek)
   const [confirm, setConfirm] = useState(false)
+  const [confirmStep, setConfirmStep] = useState(false)
+  const [reopen, setReopen] = useState(false)
   const [celebrate, setCelebrate] = useState(false)
 
   const live = useMemo(
@@ -75,11 +78,22 @@ export default function Report() {
     [log, settings, currentWeekStart, weeks]
   )
 
+  function openConfirm() {
+    setConfirmStep(false)
+    setConfirm(true)
+  }
+
   function doClose() {
     closeWeek()
     setConfirm(false)
+    setConfirmStep(false)
     setCelebrate(true)
     setTimeout(() => setCelebrate(false), 2600)
+  }
+
+  function doReopen() {
+    reopenWeek()
+    setReopen(false)
   }
 
   return (
@@ -107,24 +121,58 @@ export default function Report() {
 
       <SnapshotCard snap={live} live />
 
-      <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} onClick={() => setConfirm(true)} data-testid="close-week">
+      <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} onClick={openConfirm} data-testid="close-week">
         🏁 Закрыть неделю
       </button>
       <p className="faint center" style={{ fontSize: 12, marginTop: 8 }}>
         В v1 это делает сервер автоматически в вс {settings.checkpointTime}
       </p>
 
-      {weeks.length > 0 && <div className="section-label">Прошлые недели</div>}
+      {weeks.length > 0 && (
+        <div className="row between" style={{ marginTop: 4 }}>
+          <div className="section-label" style={{ margin: 0 }}>Прошлые недели</div>
+          <button className="chip" onClick={() => setReopen(true)} data-testid="reopen-week">
+            ↩︎ Вернуть последнюю
+          </button>
+        </div>
+      )}
       {weeks.map((w) => <SnapshotCard key={w.weekId + w.closedAt} snap={w} />)}
 
-      <Sheet open={confirm} onClose={() => setConfirm(false)} title="Закрыть неделю?">
+      <Sheet open={confirm} onClose={() => { setConfirm(false); setConfirmStep(false) }} title="Закрыть неделю?">
+        {!confirmStep ? (
+          <>
+            <p className="muted">
+              Будет сформирован отчёт, обновится сезонный зачёт (W–L) и начнётся новая неделя с нуля. Историю отметок это не удаляет.
+            </p>
+            <p className="faint" style={{ fontSize: 13 }}>
+              Это действие лучше делать только в конце недели. Если закрыли случайно — потом можно вернуть кнопкой «Вернуть последнюю».
+            </p>
+            <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} onClick={() => setConfirmStep(true)}>
+              Далее
+            </button>
+            <button className="btn btn-ghost btn-block" style={{ marginTop: 10 }} onClick={() => setConfirm(false)}>Отмена</button>
+          </>
+        ) : (
+          <>
+            <p className="muted">
+              Вы точно хотите закрыть текущую неделю и начать новую? Текущий счёт обнулится.
+            </p>
+            <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} onClick={doClose} data-testid="confirm-close">
+              Да, закрыть неделю
+            </button>
+            <button className="btn btn-ghost btn-block" style={{ marginTop: 10 }} onClick={() => { setConfirm(false); setConfirmStep(false) }}>Отмена</button>
+          </>
+        )}
+      </Sheet>
+
+      <Sheet open={reopen} onClose={() => setReopen(false)} title="Вернуть последнюю неделю?">
         <p className="muted">
-          Будет сформирован отчёт, обновится сезонный зачёт (W–L) и начнётся новая неделя с нуля. Историю отметок это не удаляет.
+          Последний отчёт будет удалён, сезонный зачёт откатится, а закрытая неделя снова станет текущей. Отметки при этом сохранятся.
         </p>
-        <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} onClick={doClose} data-testid="confirm-close">
-          Сформировать отчёт
+        <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} onClick={doReopen} data-testid="confirm-reopen">
+          Да, вернуть неделю
         </button>
-        <button className="btn btn-ghost btn-block" style={{ marginTop: 10 }} onClick={() => setConfirm(false)}>Отмена</button>
+        <button className="btn btn-ghost btn-block" style={{ marginTop: 10 }} onClick={() => setReopen(false)}>Отмена</button>
       </Sheet>
     </div>
   )

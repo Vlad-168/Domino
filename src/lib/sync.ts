@@ -18,6 +18,7 @@ import {
 import { create } from 'zustand'
 import { useStore } from '../store'
 import { initFirebase, loadSavedConfig, type FirebaseConfig } from './firebase'
+import { notifyChoreLogged } from './notify'
 import type {
   Achievement,
   Chore,
@@ -62,6 +63,9 @@ let unsubStore: (() => void) | null = null
 let pushTimer: ReturnType<typeof setTimeout> | null = null
 let applyingRemote = false
 let activeCode: string | null = null
+// The first snapshot after (re)connecting is a full backfill, not live news —
+// don't notify for it, only for entries that arrive while we're connected.
+let primed = false
 let statusCb: ((s: SyncStatus) => void) | null = null
 
 function setStatus(s: SyncStatus) {
@@ -108,8 +112,23 @@ function extractShared(): SharedState {
   }
 }
 
+// Fire motivational notifications for chores the partner logged since our
+// last view. Skips the priming snapshot and any stale backfilled entries.
+function notifyIncoming(local: SharedState['log'], remote: SharedState) {
+  if (!primed) return
+  const known = new Set(local.map((e) => e.id))
+  const tomb = new Set(remote.deletedLogIds ?? [])
+  const now = Date.now()
+  for (const e of remote.log) {
+    if (known.has(e.id) || tomb.has(e.id)) continue
+    if (now - e.ts > 5 * 60 * 1000) continue // ignore historical entries
+    void notifyChoreLogged(e, remote.settings)
+  }
+}
+
 function mergeRemote(remote: SharedState) {
   const local = useStore.getState()
+  notifyIncoming(local.log, remote)
   const deletedLogIds = Array.from(
     new Set([...(local.deletedLogIds ?? []), ...(remote.deletedLogIds ?? [])])
   )
@@ -151,6 +170,7 @@ export async function startSync(
   await stopSync()
   statusCb = onStatus ?? null
   activeCode = code
+  primed = false
   setStatus('connecting')
 
   const db = await initFirebase(config)
@@ -169,6 +189,9 @@ export async function startSync(
       const data = snap.data() as SharedState
       if (data.writerId === deviceId() && snap.metadata.hasPendingWrites) return
       mergeRemote(data)
+      // After the first applied remote snapshot we're "live": later arrivals
+      // are genuine partner activity and should raise notifications.
+      primed = true
     },
     () => setStatus('error')
   )
@@ -190,6 +213,7 @@ export async function stopSync(): Promise<void> {
   unsubDoc = null
   unsubStore = null
   activeCode = null
+  primed = false
   setStatus('off')
 }
 

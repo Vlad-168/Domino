@@ -143,10 +143,10 @@ export default function Report() {
       </p>
 
       {weeks.length > 0 && (
-        <div className="row between" style={{ marginTop: 4 }}>
+        <div className="row between" style={{ marginTop: 20, marginBottom: 4, alignItems: 'center', gap: 12 }}>
           <div className="section-label" style={{ margin: 0 }}>Прошлые недели</div>
-          <button className="chip" onClick={openReopen} data-testid="reopen-week">
-            ↩︎ Вернуть последнюю
+          <button className="chip" style={{ gap: 6 }} onClick={openReopen} data-testid="reopen-week">
+            ↩︎&nbsp;Вернуть последнюю
           </button>
         </div>
       )}

@@ -82,7 +82,7 @@ export default function Home() {
             📊 Отчёты
           </button>
         </div>
-        <p className="screen-sub">{formatRange(currentWeekStart, weekEnd)}</p>
+        <p className="screen-sub" style={{ marginTop: 6 }}>{formatRange(currentWeekStart, weekEnd)}</p>
       </motion.div>
 
       <motion.div {...fadeUp} className="card">

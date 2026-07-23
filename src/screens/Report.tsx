@@ -79,6 +79,12 @@ export default function Report() {
     [log, settings, currentWeekStart, weeks]
   )
 
+  // Show the most recently finished week first (by its end date).
+  const sortedWeeks = useMemo(
+    () => [...weeks].sort((a, b) => b.startTs - a.startTs),
+    [weeks]
+  )
+
   function openConfirm() {
     setConfirmStep(false)
     setConfirm(true)
@@ -143,7 +149,7 @@ export default function Report() {
           </button>
         </div>
       )}
-      {weeks.map((w) => <SnapshotCard key={w.weekId + w.closedAt} snap={w} />)}
+      {sortedWeeks.map((w) => <SnapshotCard key={w.weekId + w.closedAt} snap={w} />)}
 
       <Sheet open={confirm} onClose={() => { setConfirm(false); setConfirmStep(false) }} title="Закрыть неделю?">
         {!confirmStep ? (

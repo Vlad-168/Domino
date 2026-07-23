@@ -79,9 +79,10 @@ export default function Report() {
     [log, settings, currentWeekStart, weeks]
   )
 
-  // Show the most recently finished week first (by its end date).
+  // Show the most recently finished week first: sort by the week's end date
+  // (closest to today first), falling back to when it was actually closed.
   const sortedWeeks = useMemo(
-    () => [...weeks].sort((a, b) => b.startTs - a.startTs),
+    () => [...weeks].sort((a, b) => b.endTs - a.endTs || b.closedAt - a.closedAt),
     [weeks]
   )
 

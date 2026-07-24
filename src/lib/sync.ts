@@ -19,7 +19,7 @@ import { create } from 'zustand'
 import { useStore } from '../store'
 import { initFirebase, loadSavedConfig, type FirebaseConfig } from './firebase'
 import { notifyChoreLogged } from './notify'
-import { registerPushToken } from './push'
+import { registerPushToken, sendPartnerPush } from './push'
 import type {
   Achievement,
   Chore,
@@ -67,6 +67,9 @@ let activeCode: string | null = null
 // The first snapshot after (re)connecting is a full backfill, not live news —
 // don't notify for it, only for entries that arrive while we're connected.
 let primed = false
+// Log ids we've already accounted for, so we can tell a fresh LOCAL log (push
+// the partner) from a merged remote one (already theirs).
+let seenLogIds = new Set<string>()
 let statusCb: ((s: SyncStatus) => void) | null = null
 
 function setStatus(s: SyncStatus) {
@@ -151,6 +154,8 @@ function mergeRemote(remote: SharedState) {
     deletedLogIds,
   })
   applyingRemote = false
+  // These entries are now known — never treat them as a fresh local log.
+  for (const e of log) seenLogIds.add(e.id)
 }
 
 function schedulePush(db: Firestore, code: string) {
@@ -172,6 +177,7 @@ export async function startSync(
   statusCb = onStatus ?? null
   activeCode = code
   primed = false
+  seenLogIds = new Set(useStore.getState().log.map((e) => e.id))
   setStatus('connecting')
 
   const db = await initFirebase(config)
@@ -203,6 +209,11 @@ export async function startSync(
   // Push local mutations (debounced), skipping changes we applied from remote.
   unsubStore = useStore.subscribe(() => {
     if (applyingRemote || !activeCode) return
+    // Detect chores logged locally and push the partner about them.
+    const state = useStore.getState()
+    const added = state.log.filter((e) => !seenLogIds.has(e.id))
+    for (const e of added) seenLogIds.add(e.id)
+    if (added.length) void sendPartnerPush(db, activeCode, deviceId(), added, state.settings)
     schedulePush(db, activeCode)
   })
 }
@@ -218,6 +229,7 @@ export async function stopSync(): Promise<void> {
   unsubStore = null
   activeCode = null
   primed = false
+  seenLogIds = new Set()
   setStatus('off')
 }
 

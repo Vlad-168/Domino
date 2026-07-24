@@ -1,0 +1,7 @@
+name = "domino-push"
+main = "src/index.js"
+compatibility_date = "2024-05-01"
+
+# Secrets (set with `wrangler secret put <NAME>`), NOT committed here:
+#   FIREBASE_SERVICE_ACCOUNT  — the service-account JSON (one line)
+#   RELAY_SECRET              — a shared password the app sends in x-relay-secret

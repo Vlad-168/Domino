@@ -64,3 +64,7 @@ export async function initFirebase(cfg: FirebaseConfig): Promise<Firestore> {
 export function getDb(): Firestore | null {
   return db
 }
+
+export function getFirebaseApp(): FirebaseApp | null {
+  return app
+}

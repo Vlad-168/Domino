@@ -19,6 +19,7 @@ import { create } from 'zustand'
 import { useStore } from '../store'
 import { initFirebase, loadSavedConfig, type FirebaseConfig } from './firebase'
 import { notifyChoreLogged } from './notify'
+import { registerPushToken } from './push'
 import type {
   Achievement,
   Chore,
@@ -175,6 +176,9 @@ export async function startSync(
 
   const db = await initFirebase(config)
   const ref = doc(db, 'households', code)
+
+  // Register this device for background push (no-op if not configured).
+  void registerPushToken(db, code, deviceId())
 
   // Live subscription: apply remote changes (ignoring our own echo).
   unsubDoc = onSnapshot(
